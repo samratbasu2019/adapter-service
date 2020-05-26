@@ -24,7 +24,7 @@ public class SwaggerConfig {
 	}
 
 	private Predicate<String> postPaths() {
-		return or(regex("/infosys/files"));
+		return or(regex("/adapter/upload"));
 	}
 
 	private ApiInfo apiInfo() {
