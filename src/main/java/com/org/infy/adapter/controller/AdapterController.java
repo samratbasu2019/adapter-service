@@ -2,17 +2,16 @@ package com.org.infy.adapter.controller;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.org.infy.adapter.model.ICountStore;
 import com.org.infy.adapter.service.FileStorageService;
 import com.org.infy.adapter.util.ResponseHelper;
-
+import com.org.infy.adapter.util.Utility;
 
 @RestController
 public class AdapterController {
@@ -21,73 +20,109 @@ public class AdapterController {
 	@Autowired
 	private FileStorageService fileStorageService;
 	ICountStore iCountStore = null;
-	boolean status=false;
+	boolean status = false;
 	int index = 0;
 
-	@PostMapping("/adapter/upload")
-	public ResponseEntity<?> uploadMultipleFiles(@RequestParam(value = "files", required = false) MultipartFile[] files,
+	@PostMapping("/adapter/appreciation/upload")
+	public ResponseEntity<?> uploadAppreciation(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			String icountStore) {
-		
+
 		long starttime = System.currentTimeMillis();
-		
-		try {
-			iCountStore = new ObjectMapper().readValue(icountStore, ICountStore.class);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (iCountStore.getAppreciation()!=null) {
+		iCountStore = Utility.payloadToObject(icountStore);
+
+		if (iCountStore.getAppreciation() != null) {
 			iCountStore.getAppreciation().parallelStream().forEach(action -> {
 				logger.info("Employee id value :" + iCountStore.getEmployeeId());
-				final String dir = System.getProperty("user.dir");
-				logger.info("File stored in : " + dir);
-				status= fileStorageService.storeiCountAppreciation(files, iCountStore,index);
+				//final String dir = System.getProperty("user.dir");
+				//logger.info("File stored in : " + dir);
+				status = fileStorageService.storeiCountAppreciation(files, iCountStore, index);
 				long endtime = System.currentTimeMillis();
 				logger.info("Total processing time " + (endtime - starttime) + " ms.");
-				index=index+1;
+				index++;
 			});
+		} else {
+			index = 0;
+			return new ResponseEntity<>(ResponseHelper.populateRresponse("Bad request", "failed"), HttpStatus.BAD_REQUEST);
 		}
-
-		
-		else if (iCountStore.getCourse()!=null) {
-			iCountStore.getCourse().parallelStream().forEach(action -> {
-				logger.info("Employee id value :" + iCountStore.getEmployeeId());
-				final String dir = System.getProperty("user.dir");
-				logger.info("File stored in : " + dir);
-				status= fileStorageService.storeiCountCourse(files, iCountStore,index);
-				long endtime = System.currentTimeMillis();
-				logger.info("Total processing time " + (endtime - starttime) + " ms.");
-				index=index+1;
-			});
-		}
-		
-		else if (iCountStore.getFeedback()!=null) {
-			iCountStore.getFeedback().parallelStream().forEach(action -> {
-				logger.info("Employee id value :" + iCountStore.getEmployeeId());
-				final String dir = System.getProperty("user.dir");
-				logger.info("File stored in : " + dir);
-				status= fileStorageService.storeiCountFeedback(files, iCountStore,index);
-				long endtime = System.currentTimeMillis();
-				logger.info("Total processing time " + (endtime - starttime) + " ms.");
-				index=index+1;
-			});
-		}
-		
-		else if (iCountStore.getTask()!=null) {
-			iCountStore.getTask().parallelStream().forEach(action -> {
-				logger.info("Employee id value :" + iCountStore.getEmployeeId());
-				final String dir = System.getProperty("user.dir");
-				logger.info("File stored in : " + dir);
-				status= fileStorageService.storeiCountTask(files, iCountStore,index);
-				long endtime = System.currentTimeMillis();
-				logger.info("Total processing time " + (endtime - starttime) + " ms.");
-				index=index+1;
-			});
-		}
-		
-		
-		index=0;
+		index = 0;
 		return new ResponseEntity<>(ResponseHelper.populateRresponse("Data saved sucessfully", "Success"),
 				HttpStatus.OK);
 
 	}
+
+	@PostMapping("/adapter/course/upload")
+	public ResponseEntity<?> uploadCourse(@RequestParam(value = "files", required = false) MultipartFile[] files,
+			String icountStore) {
+		iCountStore = Utility.payloadToObject(icountStore);
+		long starttime = System.currentTimeMillis();
+
+		if (iCountStore.getCourse() != null) {
+			iCountStore.getCourse().parallelStream().forEach(action -> {
+				logger.info("Employee id value :" + iCountStore.getEmployeeId());
+				//final String dir = System.getProperty("user.dir");
+				//logger.info("File stored in : " + dir);
+				status = fileStorageService.storeiCountCourse(files, iCountStore, index);
+				long endtime = System.currentTimeMillis();
+				logger.info("Total processing time " + (endtime - starttime) + " ms.");
+				index = index + 1;
+			});
+		} else {
+			index = 0;
+			return new ResponseEntity<>(ResponseHelper.populateRresponse("Bad request", "failed"), HttpStatus.BAD_REQUEST);
+		}
+		index = 0;
+		return new ResponseEntity<>(ResponseHelper.populateRresponse("Data saved sucessfully", "Success"),
+				HttpStatus.OK);
+	}
+
+	@PostMapping("/adapter/feedback/upload")
+	public ResponseEntity<?> uploadFeedback(@RequestParam(value = "files", required = false) MultipartFile[] files,
+			String icountStore) {
+		iCountStore = Utility.payloadToObject(icountStore);
+		long starttime = System.currentTimeMillis();
+
+		if (iCountStore.getFeedback() != null) {
+			iCountStore.getFeedback().parallelStream().forEach(action -> {
+				logger.info("Employee id value :" + iCountStore.getEmployeeId());
+				//final String dir = System.getProperty("user.dir");
+				//logger.info("File stored in : " + dir);
+				status = fileStorageService.storeiCountFeedback(files, iCountStore, index);
+				long endtime = System.currentTimeMillis();
+				logger.info("Total processing time " + (endtime - starttime) + " ms.");
+				index = index + 1;
+			});
+		} else {
+			index = 0;
+			return new ResponseEntity<>(ResponseHelper.populateRresponse("Bad request", "failed"), HttpStatus.BAD_REQUEST);
+		}
+		index = 0;
+		return new ResponseEntity<>(ResponseHelper.populateRresponse("Data saved sucessfully", "Success"),
+				HttpStatus.OK);
+	}
+
+	@PostMapping("/adapter/task/upload")
+	public ResponseEntity<?> uploadTask(@RequestParam(value = "files", required = false) MultipartFile[] files,
+			String icountStore) {
+		iCountStore = Utility.payloadToObject(icountStore);
+		long starttime = System.currentTimeMillis();
+
+		if (iCountStore.getTask() != null) {
+			iCountStore.getTask().parallelStream().forEach(action -> {
+				logger.info("Employee id value :" + iCountStore.getEmployeeId());
+				//final String dir = System.getProperty("user.dir");
+				//logger.info("File stored in : " + dir);
+				status = fileStorageService.storeiCountTask(files, iCountStore, index);
+				long endtime = System.currentTimeMillis();
+				logger.info("Total processing time " + (endtime - starttime) + " ms.");
+				index = index + 1;
+			});
+		} else {
+			index = 0;
+			return new ResponseEntity<>(ResponseHelper.populateRresponse("Bad request", "failed"), HttpStatus.BAD_REQUEST);
+		}
+		index = 0;
+		return new ResponseEntity<>(ResponseHelper.populateRresponse("Data saved sucessfully", "Success"),
+				HttpStatus.OK);
+	}
+
 }
