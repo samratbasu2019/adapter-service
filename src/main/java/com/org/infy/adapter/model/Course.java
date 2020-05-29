@@ -42,7 +42,7 @@ public class Course {
 	@Field(value = "completionPercentage")
 	private String completionPercentage;
 	
-	@Field
-    private List<Binary> file;
+	@Field(value = "fileInfo")
+    private List<FileInfo> fileInfo;
 
 }

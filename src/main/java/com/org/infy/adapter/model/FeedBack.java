@@ -33,7 +33,7 @@ public class FeedBack {
 	@Field(value = "feedbackDate")
 	private long feedbackDate;
 	
-	@Field
-    private List<Binary> file;
+	@Field(value = "fileInfo")
+    private List<FileInfo> fileInfo;
 
 }

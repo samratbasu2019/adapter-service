@@ -40,6 +40,6 @@ public class Task {
 	@Field(value = "taskCompletionPercentage")
 	private String taskCompletionPercentage;
 	
-	@Field
-    private List<Binary> file;
+	@Field(value = "fileInfo")
+    private List<FileInfo> fileInfo;
 }

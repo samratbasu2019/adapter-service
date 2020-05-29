@@ -33,6 +33,7 @@ public class Appreciation {
 	@Field(value = "appreciationDate")
 	private long appreciationDate;
 	
-	@Field
-    private List<Binary> file;
+	@Field(value = "fileInfo")
+    private List<FileInfo> fileInfo;
+	
 }
