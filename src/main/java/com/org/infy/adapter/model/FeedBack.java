@@ -12,12 +12,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document(collection = "col_icount_feedback")
 public class FeedBack {
-	@Id
-	@Field(value = "_id")
-	private String id;
-	
+
 	@Field(value = "feedbackerName")
 	private String feedbackerName;
 	

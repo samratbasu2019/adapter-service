@@ -12,11 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document(collection = "col_icount_appreciation")
 public class Appreciation {
-	@Id
-	@Field(value = "_id")
-	private String id;
 	
 	@Field(value = "appreciatorName")
 	private String appreciatorName;

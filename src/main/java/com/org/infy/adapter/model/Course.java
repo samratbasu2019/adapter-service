@@ -12,11 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document(collection = "col_icount_course")
 public class Course {
-	@Id
-	@Field(value = "_id")
-	private String id;
 	
 	@Field(value = "courseCreatorName")
 	private String courseCreatorName;

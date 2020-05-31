@@ -12,12 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document(collection="col_icount_task")
 public class Task {
-
-	@Id
-	@Field(value = "_id")
-	private String id;
 	
 	@Field(value = "taskCreatorName")
 	private String taskCreatorName;

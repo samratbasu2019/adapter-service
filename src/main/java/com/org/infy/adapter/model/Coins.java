@@ -1,7 +1,5 @@
 package com.org.infy.adapter.model;
 
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -10,8 +8,9 @@ import lombok.Getter;
 import lombok.Setter;
 @Getter
 @Setter
-@Document(collection = "col_icount_store")
-public class ICountStore {
+@Document(collection = "col_user_coins")
+public class Coins {
+
 	@Id
 	@Field(value = "_id")
 	private String id;
@@ -25,23 +24,16 @@ public class ICountStore {
 	@Field(value = "email")
 	private String email;
 	
-	@Field(value = "date")
-	private long date;
-	
 	@Field(value = "coins")
 	private int coins;
 	
-	@Field(value = "appreciation")
-	private List<Appreciation> appreciation;
+	@Field(value = "lastupdated")
+	private long lastupdated;
 	
-	@Field(value = "course")
-	private List<Course> course;
-		
-	@Field(value = "feedback")
-	private List<FeedBack> feedback;
+	@Field(value = "redeemed")
+	private String redeemed;
 	
-	@Field(value = "task")
-	private List<Task> task;
-	
+	@Field(value = "redeemdate")
+	private long redeemdate;
 	
 }
