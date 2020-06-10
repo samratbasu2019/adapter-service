@@ -1,5 +1,7 @@
 package com.org.infy.adapter.service;
 
+import com.org.infy.adapter.dto.CoinDTO;
+import com.org.infy.adapter.dto.RequestCoinPayload;
 import com.org.infy.adapter.exception.FileStorageException;
 import com.org.infy.adapter.exception.MyFileNotFoundException;
 import com.org.infy.adapter.model.Appreciation;
@@ -13,15 +15,23 @@ import com.org.infy.adapter.property.FileStorageProperties;
 import com.org.infy.adapter.repository.ICountRepository;
 import com.org.infy.adapter.repository.UserCoinRepository;
 import com.org.infy.adapter.util.Constants;
+import com.org.infy.adapter.util.Utility;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,29 +51,16 @@ public class FileStorageService {
 	private final Path fileStorageLocation;
 	boolean status = true;
 
-	@Value("${app.adapter.appreciation.given}")
-	private String appreciationGiven;
-
-	@Value("${app.adapter.appreciation.received}")
-	private String appreciationReceived;
-
-	@Value("${app.adapter.feedback.given}")
-	private String feedbackGiven;
-
-	@Value("${app.adapter.feedback.received}")
-	private String feedbackReceived;
-
-	@Value("${app.adapter.course.complete}")
-	private String courseComplete;
-
-	@Value("${app.adapter.task.complete}")
-	private String taskComplete;
-
+	@Value("${app.redis.service.rest.coins.url}")
+	private String restCoinUrl;
+	
 	@Autowired
 	private ICountRepository icountRepo;
 
 	@Autowired
 	private UserCoinRepository coinRepo;
+	
+	
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
@@ -71,7 +68,6 @@ public class FileStorageService {
 		Long path = pathSuffix.nextLong();
 		this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir() + path.toString()).toAbsolutePath()
 				.normalize();
-		System.out.println("Samrat absolute path is :" + fileStorageLocation);
 		try {
 			Files.createDirectories(this.fileStorageLocation);
 		} catch (Exception ex) {
@@ -79,22 +75,94 @@ public class FileStorageService {
 					ex);
 		}
 	}
+	
+	private ResponseEntity<CoinDTO> getCoinDetails() {
+		
+		  RestTemplate restTemplate = new RestTemplate();
+		  HttpHeaders headers = new HttpHeaders();
+	      headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+	      RequestCoinPayload rcp= new RequestCoinPayload();
+	      rcp.setKey("coins");
+	      HttpEntity<RequestCoinPayload> entity = new HttpEntity<RequestCoinPayload>(rcp,headers);
+	      
+	      ResponseEntity<CoinDTO> coins = restTemplate.exchange(restCoinUrl,HttpMethod.POST, entity, 
+	    		  new ParameterizedTypeReference<CoinDTO>() {
+				});
+	      
+	      logger.info("Coin DTO is:"+coins);
+		
+	return coins;
+	}
 
 	private void saveUserCoins(String type, ICountStore iStore) {
+		ResponseEntity<CoinDTO> result= getCoinDetails();
+		CoinDTO coinsDetails = result.getBody();	
+		int appreciationGiven=0,appreciationReceived = 0, feedbackGiven=0, feedbackReceived = 0, courseComplete = 0, taskComplete = 0;
+
+		if(null!=coinsDetails.getResetToDefaultDate()) {
+			String startDate = Utility.getDateFromEpoc(iStore.getDate());
+			String endDate = Utility.getDateFromEpoc(coinsDetails.getResetToDefaultDate());
+			
+			if (Utility.compareDate(startDate,endDate) == 0 || Utility.compareDate(startDate,endDate) == 2){
+				appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
+				appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
+				feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
+				feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
+				courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins(); 
+				taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
+			}
+			if (Utility.compareDate(startDate,endDate) == 1){
+				appreciationGiven = coinsDetails.getDeals().getAppreciationGivenCoins();
+				appreciationReceived = coinsDetails.getDeals().getAppreciationReceivedCoins();
+				feedbackGiven = coinsDetails.getDeals().getFeedbackGivenCoins();
+				feedbackReceived = coinsDetails.getDeals().getFeedbackReceivedCoins();
+				courseComplete = coinsDetails.getDeals().getCourseCompleteCoins(); 
+				taskComplete = coinsDetails.getDeals().getTaskCompleteCoins();
+			}
+			
+		}else {
+			appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
+			appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
+			feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
+			feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
+			courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins(); 
+			taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
+		}
 		Coins coins = new Coins();
 		coins.setName(iStore.getName());
 		coins.setEmployeeId(iStore.getEmployeeId());
 		coins.setEmail(iStore.getEmail());
 		coins.setLastupdated(iStore.getDate());
 		if (type.equalsIgnoreCase(Constants.APPRECIATION))
-			coins.setCoins(Integer.parseInt(appreciationReceived));
+			coins.setCoins(appreciationReceived);
 		else if (type.equalsIgnoreCase(Constants.FEEDBACK))
-			coins.setCoins(Integer.parseInt(feedbackReceived));
+			coins.setCoins(feedbackReceived);
 		else if (type.equalsIgnoreCase(Constants.COURSE))
-			coins.setCoins(Integer.parseInt(courseComplete));
+			coins.setCoins(courseComplete);
 		else if (type.equalsIgnoreCase(Constants.TASK))
-			coins.setCoins(Integer.parseInt(taskComplete));
+			coins.setCoins(taskComplete);
+		
+		logger.info("To be saved receiver data :"+coins.toString());
 		coinRepo.save(coins);
+		
+		if (type.equalsIgnoreCase(Constants.APPRECIATION)) {
+			Coins coinsAppreciator = new Coins();
+			coinsAppreciator.setName(iStore.getAppreciation().get(0).getAppreciatorName());
+			coinsAppreciator.setEmail(iStore.getAppreciation().get(0).getAppreciatorEmail());
+			coinsAppreciator.setLastupdated(iStore.getDate());
+			coinsAppreciator.setCoins(appreciationGiven);
+			logger.info("To be saved appreciation provider data :"+coins.toString());
+			coinRepo.save(coinsAppreciator);
+		}else if (type.equalsIgnoreCase(Constants.FEEDBACK)) {
+			Coins coinsFeedbacker = new Coins();
+			coinsFeedbacker.setName(iStore.getFeedback().get(0).getFeedbackerName());
+			coinsFeedbacker.setEmail(iStore.getFeedback().get(0).getFeedbackerEmail());
+			coinsFeedbacker.setLastupdated(iStore.getDate());
+			coinsFeedbacker.setCoins(feedbackGiven);
+			logger.info("To be saved feedback provider data :"+coins.toString());
+			coinRepo.save(coinsFeedbacker);
+		}
+
 	}
 
 	public Path storeFile(MultipartFile file) {
