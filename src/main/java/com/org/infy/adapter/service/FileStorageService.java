@@ -53,14 +53,12 @@ public class FileStorageService {
 
 	@Value("${app.redis.service.rest.coins.url}")
 	private String restCoinUrl;
-	
+
 	@Autowired
 	private ICountRepository icountRepo;
 
 	@Autowired
 	private UserCoinRepository coinRepo;
-	
-	
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
@@ -75,59 +73,71 @@ public class FileStorageService {
 					ex);
 		}
 	}
-	
+
 	private ResponseEntity<CoinDTO> getCoinDetails() {
-		
-		  RestTemplate restTemplate = new RestTemplate();
-		  HttpHeaders headers = new HttpHeaders();
-	      headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-	      RequestCoinPayload rcp= new RequestCoinPayload();
-	      rcp.setKey("coins");
-	      HttpEntity<RequestCoinPayload> entity = new HttpEntity<RequestCoinPayload>(rcp,headers);
-	      
-	      ResponseEntity<CoinDTO> coins = restTemplate.exchange(restCoinUrl,HttpMethod.POST, entity, 
-	    		  new ParameterizedTypeReference<CoinDTO>() {
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		RequestCoinPayload rcp = new RequestCoinPayload();
+		rcp.setKey("coins");
+		HttpEntity<RequestCoinPayload> entity = new HttpEntity<RequestCoinPayload>(rcp, headers);
+
+		ResponseEntity<CoinDTO> coins = restTemplate.exchange(restCoinUrl, HttpMethod.POST, entity,
+				new ParameterizedTypeReference<CoinDTO>() {
 				});
-	      
-	      logger.info("Coin DTO is:"+coins);
-		
-	return coins;
+
+		logger.info("Coin DTO is:" + coins);
+
+		return coins;
 	}
 
 	private void saveUserCoins(String type, ICountStore iStore) {
-		ResponseEntity<CoinDTO> result= getCoinDetails();
-		CoinDTO coinsDetails = result.getBody();	
-		int appreciationGiven=0,appreciationReceived = 0, feedbackGiven=0, feedbackReceived = 0, courseComplete = 0, taskComplete = 0;
+		ResponseEntity<CoinDTO> result = getCoinDetails();
+		CoinDTO coinsDetails = result.getBody();
+		int appreciationGiven = 0, appreciationReceived = 0, feedbackGiven = 0, feedbackReceived = 0,
+				courseComplete = 0, taskComplete = 0;
 
-		if(null!=coinsDetails.getResetToDefaultDate()) {
-			String startDate = Utility.getDateFromEpoc(iStore.getDate());
-			String endDate = Utility.getDateFromEpoc(coinsDetails.getResetToDefaultDate());
-			
-			if (Utility.compareDate(startDate,endDate) == 0 || Utility.compareDate(startDate,endDate) == 2){
+		if (null != coinsDetails.getDealStartDate()) {
+			String today = Utility.getDateFromEpoc(iStore.getDate());
+			String endDealDate = Utility.getDateFromEpoc(coinsDetails.getDealEndDate());
+			String startDealDate = Utility.getDateFromEpoc(coinsDetails.getDealStartDate());
+
+			if (Utility.compareDate(today, startDealDate) == 2 || Utility.compareDate(today, startDealDate) == 0) {
+				if (Utility.compareDate(today, endDealDate) == 2) {
+					appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
+					appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
+					feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
+					feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
+					courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins();
+					taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
+				}
+				if (Utility.compareDate(today, endDealDate) == 1 || Utility.compareDate(today, endDealDate) == 0) {
+					appreciationGiven = coinsDetails.getDeals().getAppreciationGivenCoins();
+					appreciationReceived = coinsDetails.getDeals().getAppreciationReceivedCoins();
+					feedbackGiven = coinsDetails.getDeals().getFeedbackGivenCoins();
+					feedbackReceived = coinsDetails.getDeals().getFeedbackReceivedCoins();
+					courseComplete = coinsDetails.getDeals().getCourseCompleteCoins();
+					taskComplete = coinsDetails.getDeals().getTaskCompleteCoins();
+				}
+			}else {
 				appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
 				appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
 				feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
 				feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
-				courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins(); 
-				taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
+				courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins();
+				taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();				
 			}
-			if (Utility.compareDate(startDate,endDate) == 1){
-				appreciationGiven = coinsDetails.getDeals().getAppreciationGivenCoins();
-				appreciationReceived = coinsDetails.getDeals().getAppreciationReceivedCoins();
-				feedbackGiven = coinsDetails.getDeals().getFeedbackGivenCoins();
-				feedbackReceived = coinsDetails.getDeals().getFeedbackReceivedCoins();
-				courseComplete = coinsDetails.getDeals().getCourseCompleteCoins(); 
-				taskComplete = coinsDetails.getDeals().getTaskCompleteCoins();
-			}
-			
-		}else {
+
+		} else {
 			appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
 			appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
 			feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
 			feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
-			courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins(); 
+			courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins();
 			taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
 		}
+
 		Coins coins = new Coins();
 		coins.setName(iStore.getName());
 		coins.setEmployeeId(iStore.getEmployeeId());
@@ -141,25 +151,25 @@ public class FileStorageService {
 			coins.setCoins(courseComplete);
 		else if (type.equalsIgnoreCase(Constants.TASK))
 			coins.setCoins(taskComplete);
-		
-		logger.info("To be saved receiver data :"+coins.toString());
+
+		logger.info("To be saved receiver data :" + coins.toString());
 		coinRepo.save(coins);
-		
+
 		if (type.equalsIgnoreCase(Constants.APPRECIATION)) {
 			Coins coinsAppreciator = new Coins();
 			coinsAppreciator.setName(iStore.getAppreciation().get(0).getAppreciatorName());
 			coinsAppreciator.setEmail(iStore.getAppreciation().get(0).getAppreciatorEmail());
 			coinsAppreciator.setLastupdated(iStore.getDate());
 			coinsAppreciator.setCoins(appreciationGiven);
-			logger.info("To be saved appreciation provider data :"+coins.toString());
+			logger.info("To be saved appreciation provider data :" + coins.toString());
 			coinRepo.save(coinsAppreciator);
-		}else if (type.equalsIgnoreCase(Constants.FEEDBACK)) {
+		} else if (type.equalsIgnoreCase(Constants.FEEDBACK)) {
 			Coins coinsFeedbacker = new Coins();
 			coinsFeedbacker.setName(iStore.getFeedback().get(0).getFeedbackerName());
 			coinsFeedbacker.setEmail(iStore.getFeedback().get(0).getFeedbackerEmail());
 			coinsFeedbacker.setLastupdated(iStore.getDate());
 			coinsFeedbacker.setCoins(feedbackGiven);
-			logger.info("To be saved feedback provider data :"+coins.toString());
+			logger.info("To be saved feedback provider data :" + coins.toString());
 			coinRepo.save(coinsFeedbacker);
 		}
 
@@ -232,8 +242,8 @@ public class FileStorageService {
 
 		icountDTO.setAppreciation(appretiationList);
 		icountRepo.save(icountDTO);
-		saveUserCoins(Constants.APPRECIATION,icountDTO);
-		
+		saveUserCoins(Constants.APPRECIATION, icountDTO);
+
 		return status;
 
 	}
@@ -273,7 +283,7 @@ public class FileStorageService {
 
 		icountDTO.setCourse(courseList);
 		icountRepo.save(icountDTO);
-		saveUserCoins(Constants.COURSE,icountDTO);
+		saveUserCoins(Constants.COURSE, icountDTO);
 		return status;
 
 	}
@@ -310,7 +320,7 @@ public class FileStorageService {
 
 		icountDTO.setFeedback(feedbackList);
 		icountRepo.save(icountDTO);
-		saveUserCoins(Constants.FEEDBACK,icountDTO);
+		saveUserCoins(Constants.FEEDBACK, icountDTO);
 		return status;
 
 	}
@@ -349,7 +359,7 @@ public class FileStorageService {
 
 		icountDTO.setTask(taskList);
 		icountRepo.save(icountDTO);
-		saveUserCoins(Constants.TASK,icountDTO);
+		saveUserCoins(Constants.TASK, icountDTO);
 		return status;
 
 	}
