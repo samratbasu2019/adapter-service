@@ -13,6 +13,7 @@ import com.org.infy.adapter.service.FileStorageService;
 import com.org.infy.adapter.util.ResponseHelper;
 import com.org.infy.adapter.util.Utility;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class AdapterController {
 	protected final Log logger = LogFactory.getLog(this.getClass());
