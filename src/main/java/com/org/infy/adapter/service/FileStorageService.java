@@ -1,5 +1,7 @@
 package com.org.infy.adapter.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.org.infy.adapter.dto.CoinDTO;
 import com.org.infy.adapter.dto.RequestCoinPayload;
 import com.org.infy.adapter.exception.FileStorageException;
@@ -33,6 +35,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -54,6 +58,9 @@ public class FileStorageService {
 	@Value("${app.redis.service.rest.coins.url}")
 	private String restCoinUrl;
 
+	@Value("${app.kafka.service.rest.url}")
+	private String restKafkaUrl;
+
 	@Autowired
 	private ICountRepository icountRepo;
 
@@ -72,6 +79,31 @@ public class FileStorageService {
 			throw new FileStorageException("Could not create the directory where the uploaded files will be stored.",
 					ex);
 		}
+	}
+
+	private HttpEntity<String> invokeKafkaService(String type, ICountStore iStore) {
+		ObjectMapper obm = new ObjectMapper();
+		String requestPayload = null;
+		HttpEntity<String> response = null;
+		try {
+			requestPayload = obm.writeValueAsString(iStore);
+			logger.info("Request Payload :" + requestPayload);
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> entity = new HttpEntity<String>(requestPayload,headers);
+			UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(restKafkaUrl).queryParam("type", type);
+					//.queryParam("message", requestPayload);
+			
+			response = restTemplate.exchange(builder.toUriString(), HttpMethod.POST, entity, String.class);
+			
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return response;
 	}
 
 	private ResponseEntity<CoinDTO> getCoinDetails() {
@@ -120,13 +152,13 @@ public class FileStorageService {
 					courseComplete = coinsDetails.getDeals().getCourseCompleteCoins();
 					taskComplete = coinsDetails.getDeals().getTaskCompleteCoins();
 				}
-			}else {
+			} else {
 				appreciationGiven = coinsDetails.getDefaults().getAppreciationGivenCoins();
 				appreciationReceived = coinsDetails.getDefaults().getAppreciationReceivedCoins();
 				feedbackGiven = coinsDetails.getDefaults().getFeedbackGivenCoins();
 				feedbackReceived = coinsDetails.getDefaults().getFeedbackReceivedCoins();
 				courseComplete = coinsDetails.getDefaults().getCourseCompleteCoins();
-				taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();				
+				taskComplete = coinsDetails.getDefaults().getTaskCompleteCoins();
 			}
 
 		} else {
@@ -243,7 +275,7 @@ public class FileStorageService {
 		icountDTO.setAppreciation(appretiationList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.APPRECIATION, icountDTO);
-
+		HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION,icountDTO);
 		return status;
 
 	}
@@ -284,6 +316,7 @@ public class FileStorageService {
 		icountDTO.setCourse(courseList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.COURSE, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.COURSE,icountDTO);
 		return status;
 
 	}
@@ -321,6 +354,7 @@ public class FileStorageService {
 		icountDTO.setFeedback(feedbackList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.FEEDBACK, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK,icountDTO);
 		return status;
 
 	}
