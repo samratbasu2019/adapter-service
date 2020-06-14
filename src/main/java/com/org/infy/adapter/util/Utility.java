@@ -7,9 +7,12 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.org.infy.adapter.model.ICountStore;
 
+@JsonInclude(Include.NON_DEFAULT)
 public class Utility {
 	protected static final Log logger = LogFactory.getLog(Utility.class);
 	public static ICountStore payloadToObject(String icountStore) {
