@@ -29,9 +29,10 @@ public class AdapterController {
 	public ResponseEntity<?> uploadAppreciation(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			 String icountStore) {
 
-		long starttime = System.currentTimeMillis();
+		
 		iCountStore = Utility.payloadToObject(icountStore);
-
+		long starttime = System.currentTimeMillis();
+		
 		if (iCountStore.getAppreciation() != null) {
 			iCountStore.getAppreciation().parallelStream().forEach(action -> {
 				logger.info("Employee id value :" + iCountStore.getEmployeeId());
@@ -55,10 +56,11 @@ public class AdapterController {
 	@PostMapping("/adapter/course/upload")
 	public ResponseEntity<?> uploadCourse(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			 String icountStore) {
-		long starttime = System.currentTimeMillis();
+	
 		iCountStore = Utility.payloadToObject(icountStore);
 		
-
+		long starttime = System.currentTimeMillis();
+		
 		if (iCountStore.getCourse() != null) {
 			iCountStore.getCourse().parallelStream().forEach(action -> {
 				logger.info("Employee id value :" + iCountStore.getEmployeeId());
@@ -107,9 +109,9 @@ public class AdapterController {
 	@PostMapping("/adapter/task/upload")
 	public ResponseEntity<?> uploadTask(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			String icountStore) {
-		long starttime = System.currentTimeMillis();
-		iCountStore = Utility.payloadToObject(icountStore);
 		
+		iCountStore = Utility.payloadToObject(icountStore);
+		long starttime = System.currentTimeMillis();
 
 		if (iCountStore.getTask() != null) {
 			iCountStore.getTask().parallelStream().forEach(action -> {
