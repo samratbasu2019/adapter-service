@@ -27,7 +27,7 @@ public class AdapterController {
 
 	@PostMapping("/adapter/appreciation/upload")
 	public ResponseEntity<?> uploadAppreciation(@RequestParam(value = "files", required = false) MultipartFile[] files,
-			@RequestBody String icountStore) {
+			 String icountStore) {
 
 		long starttime = System.currentTimeMillis();
 		iCountStore = Utility.payloadToObject(icountStore);
@@ -54,7 +54,7 @@ public class AdapterController {
 
 	@PostMapping("/adapter/course/upload")
 	public ResponseEntity<?> uploadCourse(@RequestParam(value = "files", required = false) MultipartFile[] files,
-			@RequestBody String icountStore) {
+			 String icountStore) {
 		long starttime = System.currentTimeMillis();
 		iCountStore = Utility.payloadToObject(icountStore);
 		
@@ -80,7 +80,7 @@ public class AdapterController {
 
 	@PostMapping("/adapter/feedback/upload")
 	public ResponseEntity<?> uploadFeedback(@RequestParam(value = "files", required = false) MultipartFile[] files,
-			@RequestBody String icountStore) {
+			String icountStore) {
 		long starttime = System.currentTimeMillis();
 		iCountStore = Utility.payloadToObject(icountStore);
 		
@@ -106,7 +106,7 @@ public class AdapterController {
 
 	@PostMapping("/adapter/task/upload")
 	public ResponseEntity<?> uploadTask(@RequestParam(value = "files", required = false) MultipartFile[] files,
-			@RequestBody String icountStore) {
+			String icountStore) {
 		long starttime = System.currentTimeMillis();
 		iCountStore = Utility.payloadToObject(icountStore);
 		
