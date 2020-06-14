@@ -47,6 +47,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -367,6 +368,7 @@ public class FileStorageService {
 		task.setTaskName(icountDTO.getTask().get(index).getTaskName());
 		task.setTaskDescription(icountDTO.getTask().get(index).getTaskDescription());
 		task.setTaskCreatorName(icountDTO.getTask().get(index).getTaskCreatorName());
+		task.setTaskStatus(icountDTO.getTask().get(index).getTaskStatus());
 		task.setTaskCreatorEmail(icountDTO.getTask().get(index).getTaskCreatorEmail());
 		task.setTaskStartDate(icountDTO.getTask().get(index).getTaskStartDate());
 		task.setTaskEndDate(icountDTO.getTask().get(index).getTaskEndDate());
@@ -394,8 +396,15 @@ public class FileStorageService {
 		icountDTO.setTask(taskList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.TASK, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.TASK,icountDTO);
 		return status;
 
 	}
-
+	
+	public List<ICountStore> findByTasks(String email){
+		List<ICountStore> istore = icountRepo.findByEmailAndIstask(email, Constants.ISTASK);
+		return istore;
+	}
+	
+	
 }

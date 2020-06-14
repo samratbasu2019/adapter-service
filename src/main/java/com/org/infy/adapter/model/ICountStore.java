@@ -28,8 +28,8 @@ public class ICountStore {
 	@Field(value = "date")
 	private long date;
 	
-	@Field(value = "coins")
-	private int coins;
+	@Field(value = "istask")
+	private String istask;
 	
 	@Field(value = "appreciation")
 	private List<Appreciation> appreciation;

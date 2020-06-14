@@ -1,5 +1,7 @@
 package com.org.infy.adapter.controller;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,8 +56,9 @@ public class AdapterController {
 	@PostMapping("/adapter/course/upload")
 	public ResponseEntity<?> uploadCourse(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			String icountStore) {
-		iCountStore = Utility.payloadToObject(icountStore);
 		long starttime = System.currentTimeMillis();
+		iCountStore = Utility.payloadToObject(icountStore);
+		
 
 		if (iCountStore.getCourse() != null) {
 			iCountStore.getCourse().parallelStream().forEach(action -> {
@@ -79,8 +82,9 @@ public class AdapterController {
 	@PostMapping("/adapter/feedback/upload")
 	public ResponseEntity<?> uploadFeedback(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			String icountStore) {
-		iCountStore = Utility.payloadToObject(icountStore);
 		long starttime = System.currentTimeMillis();
+		iCountStore = Utility.payloadToObject(icountStore);
+		
 
 		if (iCountStore.getFeedback() != null) {
 			iCountStore.getFeedback().parallelStream().forEach(action -> {
@@ -104,12 +108,14 @@ public class AdapterController {
 	@PostMapping("/adapter/task/upload")
 	public ResponseEntity<?> uploadTask(@RequestParam(value = "files", required = false) MultipartFile[] files,
 			String icountStore) {
-		iCountStore = Utility.payloadToObject(icountStore);
 		long starttime = System.currentTimeMillis();
+		iCountStore = Utility.payloadToObject(icountStore);
+		
 
 		if (iCountStore.getTask() != null) {
 			iCountStore.getTask().parallelStream().forEach(action -> {
 				logger.info("Employee id value :" + iCountStore.getEmployeeId());
+				logger.info("Task Status value is :" + iCountStore.getTask().get(0).getTaskStatus());
 				//final String dir = System.getProperty("user.dir");
 				//logger.info("File stored in : " + dir);
 				status = fileStorageService.storeiCountTask(files, iCountStore, index);
@@ -125,5 +131,17 @@ public class AdapterController {
 		return new ResponseEntity<>(ResponseHelper.populateRresponse("Data saved sucessfully", "Success"),
 				HttpStatus.OK);
 	}
+	
+	@GetMapping("/adapter/fetchTasks")
+	public ResponseEntity<?> getTask(@RequestParam String email) {
+		long starttime = System.currentTimeMillis();
 
+		List<ICountStore> iStoreTaskList = fileStorageService.findByTasks(email);
+		
+		long endtime = System.currentTimeMillis();
+		logger.info("Total processing time " + (endtime - starttime) + " ms.");
+				
+		return new ResponseEntity<>(iStoreTaskList,	HttpStatus.OK);
+	}
+	
 }

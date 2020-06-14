@@ -35,6 +35,9 @@ public class Task {
 	@Field(value = "taskCompletionPercentage")
 	private String taskCompletionPercentage;
 	
+	@Field(value = "taskStatus")
+	private String taskStatus;
+	
 	@Field(value = "fileInfo")
     private List<FileInfo> fileInfo;
 }
