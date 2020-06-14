@@ -19,6 +19,7 @@ import com.org.infy.adapter.util.Utility;
 public class AdapterController {
 	protected final Log logger = LogFactory.getLog(this.getClass());
 
+	
 	@Autowired
 	private FileStorageService fileStorageService;
 	ICountStore iCountStore = null;
