@@ -276,7 +276,7 @@ public class FileStorageService {
 		icountDTO.setAppreciation(appretiationList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.APPRECIATION, icountDTO);
-		HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION,icountDTO);
+	//	HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION,icountDTO);
 		return status;
 
 	}
@@ -317,7 +317,7 @@ public class FileStorageService {
 		icountDTO.setCourse(courseList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.COURSE, icountDTO);
-		HttpEntity<String> response = invokeKafkaService(Constants.COURSE,icountDTO);
+	//	HttpEntity<String> response = invokeKafkaService(Constants.COURSE,icountDTO);
 		return status;
 
 	}
@@ -355,7 +355,7 @@ public class FileStorageService {
 		icountDTO.setFeedback(feedbackList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.FEEDBACK, icountDTO);
-		HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK,icountDTO);
+	//	HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK,icountDTO);
 		return status;
 
 	}
@@ -396,7 +396,7 @@ public class FileStorageService {
 		icountDTO.setTask(taskList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.TASK, icountDTO);
-		HttpEntity<String> response = invokeKafkaService(Constants.TASK,icountDTO);
+	//	HttpEntity<String> response = invokeKafkaService(Constants.TASK,icountDTO);
 		return status;
 
 	}
