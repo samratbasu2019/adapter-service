@@ -45,6 +45,5 @@ public class ICountStore {
 	
 	@Field(value = "task")
 	private List<Task> task;
-	
-	
+		
 }
