@@ -31,6 +31,9 @@ public class ICountStore {
 	@Field(value = "istask")
 	private String istask;
 	
+	@Field(value = "category")
+	private String category;
+	
 	@Field(value = "appreciation")
 	private List<Appreciation> appreciation;
 	
