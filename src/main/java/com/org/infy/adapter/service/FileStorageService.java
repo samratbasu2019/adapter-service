@@ -1,7 +1,16 @@
 package com.org.infy.adapter.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.atlassian.jira.rest.client.api.IssueRestClient;
+//import com.atlassian.jira.rest.client.api.SearchRestClient;
+//import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+//import com.atlassian.jira.rest.client.api.domain.Issue;
+//import com.atlassian.jira.rest.client.api.domain.SearchResult;
+//import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+//import com.atlassian.util.concurrent.Promise;
 import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.org.infosys.IJiraAdapterService;
+//import com.org.infosys.JiraAdapterService;
+//import com.org.infosys.model.JiraResponse;
 import com.org.infy.adapter.dto.CoinDTO;
 import com.org.infy.adapter.dto.RequestCoinPayload;
 import com.org.infy.adapter.exception.FileStorageException;
@@ -12,9 +21,11 @@ import com.org.infy.adapter.model.Course;
 import com.org.infy.adapter.model.FeedBack;
 import com.org.infy.adapter.model.FileInfo;
 import com.org.infy.adapter.model.ICountStore;
+import com.org.infy.adapter.model.JiraTaskStore;
 import com.org.infy.adapter.model.Task;
 import com.org.infy.adapter.property.FileStorageProperties;
 import com.org.infy.adapter.repository.ICountRepository;
+import com.org.infy.adapter.repository.JiraRepository;
 import com.org.infy.adapter.repository.UserCoinRepository;
 import com.org.infy.adapter.util.Constants;
 import com.org.infy.adapter.util.Utility;
@@ -38,17 +49,25 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class FileStorageService {
@@ -62,11 +81,27 @@ public class FileStorageService {
 	@Value("${app.kafka.service.rest.url}")
 	private String restKafkaUrl;
 
+	@Value("${app.jira.url}")
+	private String jiraURL;
+
+	@Value("${app.jira.username}")
+	private String userName;
+
+	@Value("${app.jira.password}")
+	private String password;
+
+	@Value("${app.jira.client.lib}")
+	private String jiraLib;
+
 	@Autowired
 	private ICountRepository icountRepo;
 
 	@Autowired
 	private UserCoinRepository coinRepo;
+
+	@Autowired
+	private JiraRepository jiraRepo;
+	// private com.atlassian.jira.rest.client.api.JiraRestClient client;
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
@@ -93,13 +128,12 @@ public class FileStorageService {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> entity = new HttpEntity<String>(requestPayload,headers);
+			HttpEntity<String> entity = new HttpEntity<String>(requestPayload, headers);
 			UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(restKafkaUrl).queryParam("type", type);
-					//.queryParam("message", requestPayload);
-			
+			// .queryParam("message", requestPayload);
+
 			response = restTemplate.exchange(builder.toUriString(), HttpMethod.POST, entity, String.class);
-			
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -259,6 +293,7 @@ public class FileStorageService {
 		Arrays.asList(files).stream().forEach(fileItem -> {
 			try {
 				String fileName = StringUtils.cleanPath(fileItem.getOriginalFilename());
+				logger.info("Appreciation file name :" + fileName);
 				Path filePath = storeFile(fileItem);
 				logger.info("File Name :" + fileName + " FilePath :" + filePath.toString());
 				FileInfo fileInfo = new FileInfo();
@@ -276,7 +311,7 @@ public class FileStorageService {
 		icountDTO.setAppreciation(appretiationList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.APPRECIATION, icountDTO);
-	//	HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION,icountDTO);
+		//HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION, icountDTO);
 		return status;
 
 	}
@@ -317,7 +352,7 @@ public class FileStorageService {
 		icountDTO.setCourse(courseList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.COURSE, icountDTO);
-	//	HttpEntity<String> response = invokeKafkaService(Constants.COURSE,icountDTO);
+		//HttpEntity<String> response = invokeKafkaService(Constants.COURSE, icountDTO);
 		return status;
 
 	}
@@ -355,7 +390,7 @@ public class FileStorageService {
 		icountDTO.setFeedback(feedbackList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.FEEDBACK, icountDTO);
-	//	HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK,icountDTO);
+		//HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK, icountDTO);
 		return status;
 
 	}
@@ -396,15 +431,47 @@ public class FileStorageService {
 		icountDTO.setTask(taskList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.TASK, icountDTO);
-	//	HttpEntity<String> response = invokeKafkaService(Constants.TASK,icountDTO);
+		//HttpEntity<String> response = invokeKafkaService(Constants.TASK, icountDTO);
 		return status;
 
 	}
-	
-	public List<ICountStore> findByTasks(String email){
+
+	public List<ICountStore> findByTasks(String email) {
 		List<ICountStore> istore = icountRepo.findByEmailAndIstask(email, Constants.ISTASK);
 		return istore;
 	}
-	
-	
+
+	public void pullJiraTask() {
+
+		logger.info("Jira Lib: " + jiraLib + "Jira url : " + jiraURL + " username : " + userName + " password: "
+				+ password);
+		try {
+			JiraTaskStore[] jiraStore = null;
+			Process proc = Runtime.getRuntime().exec(jiraLib + " " + jiraURL + " " + userName + " " + password);
+			// Then retreive the process output
+			InputStream in = proc.getInputStream();
+			InputStream err = proc.getErrorStream();
+			InputStreamReader isReader = new InputStreamReader(in);
+			// Creating a BufferedReader object
+			BufferedReader reader = new BufferedReader(isReader);
+			StringBuffer sb = new StringBuffer();
+			String str;
+			while ((str = reader.readLine()) != null) {
+				sb.append(str);
+			}
+			logger.info(sb.toString());
+			
+			ObjectMapper obm = new ObjectMapper();
+			jiraStore = obm.readValue(sb.toString(), JiraTaskStore[].class);
+			for (JiraTaskStore js : jiraStore) {				
+				jiraRepo.save(js);
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
 }
