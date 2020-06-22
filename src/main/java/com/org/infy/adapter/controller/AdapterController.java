@@ -33,7 +33,7 @@ public class AdapterController {
 	public ResponseEntity<?> pullJiraTasks(@RequestParam String email) {
 
 		try {
-			fileStorageService.pullJiraTask();
+			fileStorageService.pullJiraTask(email);
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -101,7 +101,7 @@ public class FileStorageService {
 
 	@Autowired
 	private JiraRepository jiraRepo;
-	// private com.atlassian.jira.rest.client.api.JiraRestClient client;
+
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
@@ -311,7 +311,7 @@ public class FileStorageService {
 		icountDTO.setAppreciation(appretiationList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.APPRECIATION, icountDTO);
-		//HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.APPRECIATION, icountDTO);
 		return status;
 
 	}
@@ -352,7 +352,7 @@ public class FileStorageService {
 		icountDTO.setCourse(courseList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.COURSE, icountDTO);
-		//HttpEntity<String> response = invokeKafkaService(Constants.COURSE, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.COURSE, icountDTO);
 		return status;
 
 	}
@@ -390,7 +390,7 @@ public class FileStorageService {
 		icountDTO.setFeedback(feedbackList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.FEEDBACK, icountDTO);
-		//HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.FEEDBACK, icountDTO);
 		return status;
 
 	}
@@ -431,7 +431,7 @@ public class FileStorageService {
 		icountDTO.setTask(taskList);
 		icountRepo.save(icountDTO);
 		saveUserCoins(Constants.TASK, icountDTO);
-		//HttpEntity<String> response = invokeKafkaService(Constants.TASK, icountDTO);
+		HttpEntity<String> response = invokeKafkaService(Constants.TASK, icountDTO);
 		return status;
 
 	}
@@ -441,7 +441,7 @@ public class FileStorageService {
 		return istore;
 	}
 
-	public void pullJiraTask() {
+	public void pullJiraTask(String email) {
 
 		logger.info("Jira Lib: " + jiraLib + "Jira url : " + jiraURL + " username : " + userName + " password: "
 				+ password);
@@ -461,12 +461,17 @@ public class FileStorageService {
 			}
 			logger.info(sb.toString());
 			
+			
 			ObjectMapper obm = new ObjectMapper();
 			jiraStore = obm.readValue(sb.toString(), JiraTaskStore[].class);
 			for (JiraTaskStore js : jiraStore) {				
 				jiraRepo.save(js);
 			}
-			
+			ICountStore iStore = new ICountStore();
+			iStore.setEmail(email);
+			iStore.setName(email);
+			//iStore.setTask().get(0).setTaskCreatorName(email);
+			HttpEntity<String> response = invokeKafkaService(Constants.JIRATASK,iStore);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
