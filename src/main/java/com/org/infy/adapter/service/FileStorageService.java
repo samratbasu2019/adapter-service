@@ -212,14 +212,14 @@ public class FileStorageService {
 		coins.setLastupdated(iStore.getDate());
 		if (type.equalsIgnoreCase(Constants.APPRECIATION))
 			coins.setCoins(appreciationReceived);
-		else if (type.equalsIgnoreCase(Constants.FEEDBACK))
+		else if (type.equalsIgnoreCase(Constants.FEEDBACK)) 
 			coins.setCoins(feedbackReceived);
 		else if (type.equalsIgnoreCase(Constants.COURSE))
 			coins.setCoins(courseComplete);
 		else if (type.equalsIgnoreCase(Constants.TASK))
 			coins.setCoins(taskComplete);
 
-		logger.info("To be saved receiver data :" + coins.toString());
+		logger.info("To be saved receiver coins :" + coins.getCoins());
 		coinRepo.save(coins);
 
 		if (type.equalsIgnoreCase(Constants.APPRECIATION)) {
@@ -228,7 +228,7 @@ public class FileStorageService {
 			coinsAppreciator.setEmail(iStore.getAppreciation().get(0).getAppreciatorEmail());
 			coinsAppreciator.setLastupdated(iStore.getDate());
 			coinsAppreciator.setCoins(appreciationGiven);
-			logger.info("To be saved appreciation provider data :" + coins.toString());
+			logger.info("To be saved appreciation provider data :" + coins.getCoins());
 			coinRepo.save(coinsAppreciator);
 		} else if (type.equalsIgnoreCase(Constants.FEEDBACK)) {
 			Coins coinsFeedbacker = new Coins();
@@ -236,7 +236,7 @@ public class FileStorageService {
 			coinsFeedbacker.setEmail(iStore.getFeedback().get(0).getFeedbackerEmail());
 			coinsFeedbacker.setLastupdated(iStore.getDate());
 			coinsFeedbacker.setCoins(feedbackGiven);
-			logger.info("To be saved feedback provider data :" + coins.toString());
+			logger.info("To be saved feedback provider data :" + coins.getCoins());
 			coinRepo.save(coinsFeedbacker);
 		}
 
